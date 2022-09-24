@@ -1,5 +1,5 @@
 import React from 'react';
-import {useRef} from 'react';
+import { useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { ChakraProvider } from '@chakra-ui/react';
@@ -9,18 +9,10 @@ import Tesseract from 'tesseract.js';
 
 type InputProp = {
   read: () => void;
+  dispImage : () => void;
 }
 
-
-Tesseract.recognize(
-  'https://tesseract.projectnaptha.com/img/eng_bw.png',
-  'eng',
-  { logger: m => console.log(m) }
-).then(({ data: { text } }) => {
-  console.log(text);
-})
-
-const Fileinput = (props: InputProp) => { 
+const Fileinput = (props: InputProp) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const onClickInput = () => {
     inputRef.current?.click();
@@ -29,39 +21,22 @@ const Fileinput = (props: InputProp) => {
   return (
     <ChakraProvider>
       <p></p>
-      <Input 
-      ref={inputRef}  
-      type='file'
-      id='fileInput'
-      hidden/>
-      <Button onClick = {onClickInput} 
-      colorScheme='green'
-      size='md'
+      <Input
+        ref={inputRef}
+        type='file'
+        id='fileInput'
+        onChange={props.dispImage}
+        hidden />
+      <Button onClick={onClickInput}
+        colorScheme='green'
+        size='md'
 
       >画像を選択</Button>
       <br />
+
+      <img src = "" alt="" id='DispImage'/>
     </ChakraProvider>
   );
-}
-
-type DispProp = {
-  image: File | undefined,
-}
-
-const DispImage = (props: DispProp) =>{
-  if(props.image !== undefined){
-  return(
-    <ChakraProvider>
-    </ChakraProvider>
-  )
-  }
-  else{
-    return(
-      <ChakraProvider>
-
-      </ChakraProvider>
-    )
-  }
 }
 
 type Pagestate = {
@@ -69,25 +44,36 @@ type Pagestate = {
   text: string | undefined;
 }
 
-class Page  extends React.Component<{}, Pagestate> {
-  constructor(props: {}){
+class Page extends React.Component<{}, Pagestate> {
+  constructor(props: {}) {
     super(props);
     this.state = {
       data: undefined,
       text: undefined,
     }
   }
-  
+
   render() {
     return (
       <ChakraProvider>
         <h1>なんかタイトル</h1>
-        <Fileinput read={() => this.read()}/>
-        
-        <DispImage image={this.state.data}/>
+        <Fileinput 
+        read={() => this.read()} 
+        dispImage={() => this.dispImage()}/>
         <Button colorScheme='teal' size='md'>実行</Button>
       </ChakraProvider>
-    )    
+    )
+  }
+
+  dispImage() {
+    console.log("aa");
+    const inputImage = document.getElementById('fileInput') as HTMLInputElement
+    let filereader = new FileReader();
+    filereader.onloadend = () => {
+      const image = document.getElementById('DispImage') as HTMLImageElement;
+      image.src = filereader.result as string
+    }
+    filereader.readAsDataURL(inputImage.files![0])
   }
 
   read() {
@@ -113,7 +99,7 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
- <Page/>
+  <Page />
 );
 
 
