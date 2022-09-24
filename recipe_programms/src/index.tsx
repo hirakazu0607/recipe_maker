@@ -2,10 +2,10 @@ import React from 'react';
 import { useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import { ChakraProvider } from '@chakra-ui/react';
+import { Box, ChakraProvider, Stack } from '@chakra-ui/react';
 import { Input } from '@chakra-ui/react';
 import { Button, ButtonGroup } from '@chakra-ui/react'
-import {Show, Hide} from '@chakra-ui/react'
+import { Text } from '@chakra-ui/react'
 import Tesseract from 'tesseract.js';
 
 type InputProp = {
@@ -36,7 +36,9 @@ const Fileinput = (props: InputProp) => {
       <br />
 
       <img id='DispImage'/>
-      
+      <Box id = 'alt' backgroundColor='green.300' borderWidth={3} borderColor='green' height={250}>
+        <Text fontSize='md' >選択した画像がここに表示されます</Text>
+      </Box>
     </ChakraProvider>
   );
 }
@@ -69,6 +71,9 @@ class Page extends React.Component<{}, Pagestate> {
   }
 
   dispImage() {
+    const alt = document.getElementById('alt') as HTMLElement;
+    alt.style.display = "none";
+
     const inputImage = document.getElementById('fileInput') as HTMLInputElement
     let filereader = new FileReader();
     filereader.onloadend = () => {
@@ -76,6 +81,10 @@ class Page extends React.Component<{}, Pagestate> {
       image.src = filereader.result as string
     }
     filereader.readAsDataURL(inputImage.files![0])
+  }
+
+  hideAlt(){
+   
   }
 
   read() {
