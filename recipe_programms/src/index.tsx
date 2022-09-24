@@ -2,6 +2,7 @@ import React from 'react';
 import { useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import { Heading, propNames } from '@chakra-ui/react'
 import { Box, ChakraProvider, Stack } from '@chakra-ui/react';
 import { Input } from '@chakra-ui/react';
 import { Button, ButtonGroup } from '@chakra-ui/react'
@@ -15,6 +16,17 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
+} from '@chakra-ui/react'
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tfoot,
+  Tr,
+  Th,
+  Td,
+  TableCaption,
+  TableContainer,
 } from '@chakra-ui/react'
 import { Radio, RadioGroup } from '@chakra-ui/react'
 import Tesseract from 'tesseract.js';
@@ -68,57 +80,10 @@ const Fileinput = (props: InputProps) => {
   );
 }
 
-type Outputprops = {
-  ingredient: Array<string> | undefined
-  amount: Array<number> | undefined
-  unit: Array<string> | undefined
-  read: () => void
-}
-
-const Output = (props: Outputprops) => {
-  const { isOpen, onOpen, onClose } = useDisclosure()
-
-  return (
-    <>
-      <Button colorScheme='teal' onClick={() => { props.read(); onOpen(); }} >
-        次へ
-      </Button>
-      <Drawer
-        isOpen={isOpen}
-        placement='right'
-        onClose={onClose}
-        size={'full'}
-      >
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader>
-
-          </DrawerHeader>
-
-          <DrawerBody>
-            <Input placeholder='レシピは何人前？' id='original'/>
-            <Input placeholder='作るのは何人前？' id='request'/>
-            <Button colorScheme='teal' onClick={() => { props.read(); onOpen(); }} >
-              次へ
-            </Button>
-
-          </DrawerBody>
-
-          <DrawerFooter>
-
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    </>
-  )
-
-}
-
 type Textinputprops = {
-  ingredient: Array<string> | undefined
-  amount: Array<number> | undefined
-  unit: Array<string> | undefined
+  ingredient: Array<string> | null
+  amount: Array<number> | null
+  unit: Array<string> | null
 }
 
 const Textinput = (props: Textinputprops) => {
@@ -148,28 +113,134 @@ const Textinput = (props: Textinputprops) => {
   )
 }
 
+
+type TableProps = {
+  ingredient: Array<string> | null
+  amount: Array<number> | null
+  unit: Array<string> | null
+  ratio: number | null
+}
+
+const ResultTable = (props: TableProps) => {
+  if(props.ingredient != null
+    && props.amount != null
+    && props.unit != null
+    && props.ratio != null){
+  let i:number = 0
+  while(i < props.ingredient?.length){
+
+    i++;
+  }
+  
+
+  return (
+    <TableContainer>
+      <Table variant='striped' colorScheme='teal'>
+        <TableCaption></TableCaption>
+        <Thead>
+          <Tr>
+            <Th>材料名</Th>
+            <Th>量</Th>
+            <Th isNumeric>単位</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          
+        </Tbody>
+      </Table>
+    </TableContainer>
+  );
+  }
+  else{
+    return(
+      <></>
+    )
+  }
+}
+
+type Outputprops = {
+  ingredient: Array<string> | null
+  amount: Array<number> | null
+  unit: Array<string> | null
+  ratio: number | null
+  read: () => void
+  calcRatio: () => void
+}
+
+const Output = (props: Outputprops) => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  return (
+    <>
+      <Button colorScheme='teal' onClick={() => { props.read(); onOpen(); }} >
+        次へ
+      </Button>
+      <Drawer
+        isOpen={isOpen}
+        placement='right'
+        onClose={onClose}
+        size={'full'}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader>
+
+          </DrawerHeader>
+
+          <DrawerBody>
+            <Input placeholder='レシピは何人前？' id='original' />
+            <Input placeholder='作るのは何人前？' id='request' />
+            <Button colorScheme='teal' onClick={() => { props.calcRatio() }} >
+              次へ
+            </Button>
+            <br />
+
+            <ResultTable
+              ingredient={props.ingredient}
+              amount={props.amount}
+              unit={props.unit}
+              ratio={props.ratio}
+            />
+
+          </DrawerBody>
+
+          <DrawerFooter>
+
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
+  )
+
+}
+
+
+
 type Pagestate = {
-  data: File | undefined;  //受け取った画像入れる用
-  ingredient: Array<string> | undefined;
-  amount: Array<number> | undefined;
-  unit: Array<string> | undefined
+  data: File | null;  //受け取った画像入れる用
+  ingredient: Array<string> | null;
+  amount: Array<number> | null;
+  unit: Array<string> | null;
+  ratio: number | null;
 }
 
 class Page extends React.Component<{}, Pagestate> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      data: undefined,
-      ingredient: undefined,
-      amount: undefined,
-      unit: undefined
+      data: null,
+      ingredient: null,
+      amount: null,
+      unit: null,
+      ratio: null
     }
   }
 
   render() {
     return (
       <ChakraProvider>
-        <h1>なんかタイトル</h1>
+        <Heading>レシパン</Heading>
 
         <br />
         <Inputmode />
@@ -185,9 +256,11 @@ class Page extends React.Component<{}, Pagestate> {
 
         <Output
           read={() => this.read()}
+          calcRatio={() => this.calcRatio()}
           ingredient={this.state.ingredient}
           amount={this.state.amount}
           unit={this.state.unit}
+          ratio={this.state.ratio}
         />
       </ChakraProvider>
     )
@@ -215,12 +288,26 @@ class Page extends React.Component<{}, Pagestate> {
 
     console.log("aiuwe");
     //受け取りに成功していたら、内容を取り出す
-    if (buf[0] !== undefined) {
+    if (buf[0] !== null) {
       this.setState({
         data: buf[0],
       })
     }
   }
+
+  calcRatio() {
+    const original = document.getElementById('original') as HTMLInputElement
+    const request = document.getElementById('request') as HTMLInputElement
+
+    const orginalnum = original.value
+    const requestnum = request.value
+
+    this.setState({
+      ratio: Number(requestnum) / Number(orginalnum)
+    })
+  }
+
+
 }
 
 const root = ReactDOM.createRoot(
