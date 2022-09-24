@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import { ChakraProvider } from '@chakra-ui/react';
 import Tesseract from 'tesseract.js';
-import { Link } from '@chakra-ui/react'
-import { ExternalLinkIcon } from '@chakra-ui/icons'
+import { Button, ButtonGroup } from '@chakra-ui/react'
+
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -14,7 +14,8 @@ root.render(
       <div className="App">
           <p>hello React</p>
       </div>
-      <Link>Chakra UI</Link>
+      <Button colorScheme='blue'>こんにちわああああああ</Button>
+      
   </React.StrictMode>
 );
 
