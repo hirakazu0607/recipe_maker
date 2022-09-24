@@ -80,7 +80,7 @@ const Output = (props: Outputprops) => {
   return (
     <>
       <Button colorScheme='teal' onClick={() => { props.read(); onOpen(); }} >
-        実行
+        次へ
       </Button>
       <Drawer
         isOpen={isOpen}
@@ -96,11 +96,16 @@ const Output = (props: Outputprops) => {
           </DrawerHeader>
 
           <DrawerBody>
-            <Input placeholder='レシピは何人前？' /><Input placeholder='作りたいのは何人前？' />
+            <Input placeholder='レシピは何人前？' id='original'/>
+            <Input placeholder='作るのは何人前？' id='request'/>
+            <Button colorScheme='teal' onClick={() => { props.read(); onOpen(); }} >
+              次へ
+            </Button>
+
           </DrawerBody>
 
           <DrawerFooter>
-            
+
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -120,21 +125,21 @@ const Textinput = (props: Textinputprops) => {
     <ChakraProvider>
       <div id='textinputset'>
         <Input
-        backgroundColor={'green.200'} 
-        width='auto'
-        placeholder='材料名' 
-        id='ingredient' />
-        <Input 
-        type="number"  
-        width='auto'
-        backgroundColor={'green.200'}
-        placeholder='数量'
-        id='amount' />
-        <Input 
-        width='auto' 
-        backgroundColor={'green.200'}
-        placeholder='単位' 
-        id='unit' />
+          backgroundColor={'green.200'}
+          width='auto'
+          placeholder='材料名'
+          id='ingredient' />
+        <Input
+          type="number"
+          width='auto'
+          backgroundColor={'green.200'}
+          placeholder='数量'
+          id='amount' />
+        <Input
+          width='auto'
+          backgroundColor={'green.200'}
+          placeholder='単位'
+          id='unit' />
       </div>
 
     </ChakraProvider>
@@ -164,9 +169,9 @@ class Page extends React.Component<{}, Pagestate> {
     return (
       <ChakraProvider>
         <h1>なんかタイトル</h1>
-        
+
         <br />
-        <Inputmode/>
+        <Inputmode />
 
         <Fileinput
           read={() => this.read()}
