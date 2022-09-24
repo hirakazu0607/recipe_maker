@@ -8,12 +8,12 @@ import { Button, ButtonGroup } from '@chakra-ui/react'
 import { Text } from '@chakra-ui/react'
 import Tesseract from 'tesseract.js';
 
-type InputProp = {
+type InputProps = {
   read: () => void;
   dispImage : () => void;
 }
 
-const Fileinput = (props: InputProp) => {
+const Fileinput = (props: InputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const onClickInput = () => {
     inputRef.current?.click();
@@ -43,6 +43,19 @@ const Fileinput = (props: InputProp) => {
   );
 }
 
+type Outputprops = {
+  text: string | undefined
+}
+
+const Output = (props: Outputprops) => {
+
+  return (
+    <ChakraProvider>
+
+    </ChakraProvider>
+  )
+}
+
 type Pagestate = {
   data: File | undefined;  //受け取った画像入れる用
   text: string | undefined;   //画像から読み取ったの入れる用(未使用)
@@ -62,10 +75,15 @@ class Page extends React.Component<{}, Pagestate> {
     return (
       <ChakraProvider>
         <h1>なんかタイトル</h1>
+
+
+
         <Fileinput 
         read={() => this.read()} 
         dispImage={() => this.dispImage()}/>
         <Button colorScheme='teal' size='md' onClick={() => this.read()}>実行</Button>
+
+        <Output text='text'/>
       </ChakraProvider>
     )
   }
