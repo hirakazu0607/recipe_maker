@@ -2,31 +2,18 @@ import React from 'react';
 import { useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import { ChakraProvider } from '@chakra-ui/react';
+import { Box, ChakraProvider, Stack } from '@chakra-ui/react';
 import { Input } from '@chakra-ui/react';
 import { Button, ButtonGroup } from '@chakra-ui/react'
-import {Show, Hide} from '@chakra-ui/react'
+import { Text } from '@chakra-ui/react'
 import Tesseract from 'tesseract.js';
 
-type InputProp = {
+type InputProps = {
   read: () => void;
   dispImage : () => void;
 }
 
-const { createWorker } = require('tesseract.js');
-
-const worker = createWorker();
-
-(async () => {
-  await worker.load();
-  await worker.loadLanguage('eng');
-  await worker.initialize('eng');
-  const { data: { text } } = await worker.recognize('https://tesseract.projectnaptha.com/img/eng_bw.png');
-  console.log(text);
-  await worker.terminate();
-})();
-
-const Fileinput = (props: InputProp) => {
+const Fileinput = (props: InputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const onClickInput = () => {
     inputRef.current?.click();
@@ -49,9 +36,24 @@ const Fileinput = (props: InputProp) => {
       <br />
 
       <img id='DispImage'/>
-      
+      <Box id = 'alt' backgroundColor='green.300' borderWidth={3} borderColor='green' height={250}>
+        <Text fontSize='md' >選択した画像がここに表示されます</Text>
+      </Box>
     </ChakraProvider>
   );
+}
+
+type Outputprops = {
+  text: string | undefined
+}
+
+const Output = (props: Outputprops) => {
+
+  return (
+    <ChakraProvider>
+
+    </ChakraProvider>
+  )
 }
 
 type Pagestate = {
@@ -73,15 +75,23 @@ class Page extends React.Component<{}, Pagestate> {
     return (
       <ChakraProvider>
         <h1>なんかタイトル</h1>
+
+
+
         <Fileinput 
         read={() => this.read()} 
         dispImage={() => this.dispImage()}/>
         <Button colorScheme='teal' size='md' onClick={() => this.read()}>実行</Button>
+
+        <Output text='text'/>
       </ChakraProvider>
     )
   }
 
   dispImage() {
+    const alt = document.getElementById('alt') as HTMLElement;
+    alt.style.display = "none";
+
     const inputImage = document.getElementById('fileInput') as HTMLInputElement
     let filereader = new FileReader();
     filereader.onloadend = () => {
@@ -89,6 +99,10 @@ class Page extends React.Component<{}, Pagestate> {
       image.src = filereader.result as string
     }
     filereader.readAsDataURL(inputImage.files![0])
+  }
+
+  hideAlt(){
+   
   }
 
   read() {
@@ -110,7 +124,6 @@ class Page extends React.Component<{}, Pagestate> {
     
   }
 }
-
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
