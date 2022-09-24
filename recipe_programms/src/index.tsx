@@ -1,4 +1,3 @@
-import React from 'react';
 import { useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -7,6 +6,9 @@ import { Input } from '@chakra-ui/react';
 import { Button, ButtonGroup } from '@chakra-ui/react'
 import { Text } from '@chakra-ui/react'
 import Tesseract from 'tesseract.js';
+import React, { useState } from 'react';
+import { createWorker } from 'tesseract.js';
+import './sample-ocr/src/App.css';
 
 type InputProps = {
   read: () => void;
@@ -124,6 +126,48 @@ class Page extends React.Component<{}, Pagestate> {
     
   }
 }
+
+function App() {
+  const [file, setFile] = useState<File>(null as unknown as File);
+  const [textOcr, setTextOcr] = useState('');
+  const worker = createWorker({
+    logger: m => console.log(m)
+  })
+
+  const tryOcr = async() => {
+    await worker.load();
+    await worker.loadLanguage('jpn');
+    await worker.initialize('jpn');
+    const { data: { text } } = await worker.recognize(file);
+    setTextOcr(text);
+    await worker.terminate();
+  }
+
+  // fileData 取得
+  const handleChange = (e: any) => {
+    console.log(e.target.files[0]);
+    setFile(e.target.files[0])
+  }
+
+  const handleClick = async() => {
+    if (!file) return
+    setTextOcr('Recognizing...')
+    await tryOcr();
+  }
+
+  return (
+    <div className="App">
+      <input type="file" onChange={handleChange} /><br />
+      <button className="button" onClick={handleClick}>Try OCR</button>
+      <div>
+        {textOcr}
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
