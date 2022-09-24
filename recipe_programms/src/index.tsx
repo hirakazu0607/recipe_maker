@@ -5,12 +5,26 @@ import './index.css';
 import { ChakraProvider } from '@chakra-ui/react';
 import { Input } from '@chakra-ui/react';
 import { Button, ButtonGroup } from '@chakra-ui/react'
+import {Show, Hide} from '@chakra-ui/react'
 import Tesseract from 'tesseract.js';
 
 type InputProp = {
   read: () => void;
   dispImage : () => void;
 }
+
+const { createWorker } = require('tesseract.js');
+
+const worker = createWorker();
+
+(async () => {
+  await worker.load();
+  await worker.loadLanguage('eng');
+  await worker.initialize('eng');
+  const { data: { text } } = await worker.recognize('https://tesseract.projectnaptha.com/img/eng_bw.png');
+  console.log(text);
+  await worker.terminate();
+})();
 
 const Fileinput = (props: InputProp) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,14 +48,15 @@ const Fileinput = (props: InputProp) => {
       >画像を選択</Button>
       <br />
 
-      <img src = "" alt="" id='DispImage'/>
+      <img id='DispImage'/>
+      
     </ChakraProvider>
   );
 }
 
 type Pagestate = {
-  data: File | undefined;
-  text: string | undefined;
+  data: File | undefined;  //受け取った画像入れる用
+  text: string | undefined;   //画像から読み取ったの入れる用(未使用)
 }
 
 class Page extends React.Component<{}, Pagestate> {
@@ -54,19 +69,19 @@ class Page extends React.Component<{}, Pagestate> {
   }
 
   render() {
+    
     return (
       <ChakraProvider>
         <h1>なんかタイトル</h1>
         <Fileinput 
         read={() => this.read()} 
         dispImage={() => this.dispImage()}/>
-        <Button colorScheme='teal' size='md'>実行</Button>
+        <Button colorScheme='teal' size='md' onClick={() => this.read()}>実行</Button>
       </ChakraProvider>
     )
   }
 
   dispImage() {
-    console.log("aa");
     const inputImage = document.getElementById('fileInput') as HTMLInputElement
     let filereader = new FileReader();
     filereader.onloadend = () => {
@@ -84,7 +99,7 @@ class Page extends React.Component<{}, Pagestate> {
     //受け取りに成功していたら、内容を取り出す
     if (buf[0] !== undefined) {
       let dataReader = new FileReader();
-      dataReader.readAsText(buf[0]);
+      dataReader.readAsDataURL(buf[0]);
       dataReader.onloadend = () => {
         this.setState({
           data: buf[0],
@@ -92,16 +107,10 @@ class Page extends React.Component<{}, Pagestate> {
         })
       }
     }
+    
   }
 }
 
-Tesseract.recognize(
-  'https://tesseract.projectnaptha.com/img/eng_bw.png',
-  'eng',
-  { logger: m => console.log(m) }
-).then(({ data: { text } }) => {
-  console.log(text);
-})
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
