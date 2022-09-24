@@ -1,3 +1,4 @@
+import React from 'react';
 import { useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -5,14 +6,35 @@ import { Box, ChakraProvider, Stack } from '@chakra-ui/react';
 import { Input } from '@chakra-ui/react';
 import { Button, ButtonGroup } from '@chakra-ui/react'
 import { Text } from '@chakra-ui/react'
+import {
+  useDisclosure,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+} from '@chakra-ui/react'
+import { Radio, RadioGroup } from '@chakra-ui/react'
 import Tesseract from 'tesseract.js';
-import React, { useState } from 'react';
-import { createWorker } from 'tesseract.js';
-import './sample-ocr/src/App.css';
+
+function Inputmode() {
+  const [value, setValue] = React.useState('1')
+  return (
+    <RadioGroup onChange={setValue} value={value}>
+      <Stack direction='row'>
+        <Radio value='1'>画像入力</Radio>
+        <Radio value='2'>文字入力</Radio>
+      </Stack>
+    </RadioGroup>
+  )
+}
+
 
 type InputProps = {
   read: () => void;
-  dispImage : () => void;
+  dispImage: () => void;
 }
 
 const Fileinput = (props: InputProps) => {
@@ -35,10 +57,11 @@ const Fileinput = (props: InputProps) => {
         size='md'
 
       >画像を選択</Button>
+      
       <br />
 
-      <img id='DispImage'/>
-      <Box id = 'alt' backgroundColor='green.300' borderWidth={3} borderColor='green' height={250}>
+      <img id='DispImage' alt='' />
+      <Box id='alt' backgroundColor='green.300' borderWidth={3} borderColor='green' height={250}>
         <Text fontSize='md' >選択した画像がここに表示されます</Text>
       </Box>
     </ChakraProvider>
@@ -46,21 +69,90 @@ const Fileinput = (props: InputProps) => {
 }
 
 type Outputprops = {
-  text: string | undefined
+  ingredient: Array<string> | undefined
+  amount: Array<number> | undefined
+  unit: Array<string> | undefined
+  read: () => void
 }
 
 const Output = (props: Outputprops) => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   return (
+    <>
+      <Button colorScheme='teal' onClick={() => { props.read(); onOpen(); }} >
+        次へ
+      </Button>
+      <Drawer
+        isOpen={isOpen}
+        placement='right'
+        onClose={onClose}
+        size={'full'}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader>
+
+          </DrawerHeader>
+
+          <DrawerBody>
+            <Input placeholder='レシピは何人前？' id='original'/>
+            <Input placeholder='作るのは何人前？' id='request'/>
+            <Button colorScheme='teal' onClick={() => { props.read(); onOpen(); }} >
+              次へ
+            </Button>
+
+          </DrawerBody>
+
+          <DrawerFooter>
+
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
+  )
+
+}
+
+type Textinputprops = {
+  ingredient: Array<string> | undefined
+  amount: Array<number> | undefined
+  unit: Array<string> | undefined
+}
+
+const Textinput = (props: Textinputprops) => {
+  return (
     <ChakraProvider>
+      <div id='textinputset'>
+        <Input
+          backgroundColor={'green.200'}
+          width='auto'
+          placeholder='材料名'
+          id='ingredient' />
+        <Input
+          type="number"
+          width='auto'
+          backgroundColor={'green.200'}
+          placeholder='数量'
+          id='amount' />
+        <Input
+          width='auto'
+          backgroundColor={'green.200'}
+          placeholder='単位'
+          id='unit' />
+      </div>
 
     </ChakraProvider>
+
   )
 }
 
 type Pagestate = {
   data: File | undefined;  //受け取った画像入れる用
-  text: string | undefined;   //画像から読み取ったの入れる用(未使用)
+  ingredient: Array<string> | undefined;
+  amount: Array<number> | undefined;
+  unit: Array<string> | undefined
 }
 
 class Page extends React.Component<{}, Pagestate> {
@@ -68,27 +160,40 @@ class Page extends React.Component<{}, Pagestate> {
     super(props);
     this.state = {
       data: undefined,
-      text: undefined,
+      ingredient: undefined,
+      amount: undefined,
+      unit: undefined
     }
   }
 
   render() {
-    
     return (
       <ChakraProvider>
         <h1>なんかタイトル</h1>
 
+        <br />
+        <Inputmode />
 
+        <Fileinput
+          read={() => this.read()}
+          dispImage={() => this.dispImage()} />
 
-        <Fileinput 
-        read={() => this.read()} 
-        dispImage={() => this.dispImage()}/>
-        <Button colorScheme='teal' size='md' onClick={() => this.read()}>実行</Button>
+        <Textinput ingredient={this.state.ingredient}
+          amount={this.state.amount}
+          unit={this.state.unit} />
+        <br />
 
-        <Output text='text'/>
+        <Output
+          read={() => this.read()}
+          ingredient={this.state.ingredient}
+          amount={this.state.amount}
+          unit={this.state.unit}
+        />
       </ChakraProvider>
     )
   }
+
+
 
   dispImage() {
     const alt = document.getElementById('alt') as HTMLElement;
@@ -103,71 +208,20 @@ class Page extends React.Component<{}, Pagestate> {
     filereader.readAsDataURL(inputImage.files![0])
   }
 
-  hideAlt(){
-   
-  }
-
   read() {
     //HTMLからデータを受け取る
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     const buf = fileInput.files!;
 
+    console.log("aiuwe");
     //受け取りに成功していたら、内容を取り出す
     if (buf[0] !== undefined) {
-      let dataReader = new FileReader();
-      dataReader.readAsDataURL(buf[0]);
-      dataReader.onloadend = () => {
-        this.setState({
-          data: buf[0],
-          text: dataReader.result as string,
-        })
-      }
+      this.setState({
+        data: buf[0],
+      })
     }
-    
   }
 }
-
-function App() {
-  const [file, setFile] = useState<File>(null as unknown as File);
-  const [textOcr, setTextOcr] = useState('');
-  const worker = createWorker({
-    logger: m => console.log(m)
-  })
-
-  const tryOcr = async() => {
-    await worker.load();
-    await worker.loadLanguage('jpn');
-    await worker.initialize('jpn');
-    const { data: { text } } = await worker.recognize(file);
-    setTextOcr(text);
-    await worker.terminate();
-  }
-
-  // fileData 取得
-  const handleChange = (e: any) => {
-    console.log(e.target.files[0]);
-    setFile(e.target.files[0])
-  }
-
-  const handleClick = async() => {
-    if (!file) return
-    setTextOcr('Recognizing...')
-    await tryOcr();
-  }
-
-  return (
-    <div className="App">
-      <input type="file" onChange={handleChange} /><br />
-      <button className="button" onClick={handleClick}>Try OCR</button>
-      <div>
-        {textOcr}
-      </div>
-    </div>
-  );
-}
-
-export default App;
-
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -175,5 +229,3 @@ const root = ReactDOM.createRoot(
 root.render(
   <Page />
 );
-
-
