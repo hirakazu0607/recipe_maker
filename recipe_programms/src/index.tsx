@@ -31,12 +31,16 @@ import {
 import { Radio, RadioGroup } from '@chakra-ui/react'
 import Tesseract from 'tesseract.js';
 
-function Inputmode() {
+type Inputmodeprop = {
+  swich: () => void
+}
+
+function Inputmode(props: Inputmodeprop) {
   const [value, setValue] = React.useState('1')
   return (
     <RadioGroup onChange={setValue} value={value}>
       <Stack direction='row'>
-        <Radio value='1'>画像入力</Radio>
+        <Radio value='1' id = 'imageinput'>画像入力</Radio>
         <Radio value='2'>文字入力</Radio>
       </Stack>
     </RadioGroup>
@@ -69,7 +73,7 @@ const Fileinput = (props: InputProps) => {
         size='md'
 
       >画像を選択</Button>
-      
+
       <br />
 
       <img id='DispImage' alt='' />
@@ -79,6 +83,8 @@ const Fileinput = (props: InputProps) => {
     </ChakraProvider>
   );
 }
+
+
 
 type Textinputprops = {
   ingredient: Array<string> | null
@@ -122,59 +128,70 @@ type TableProps = {
 }
 
 const ResultTable = (props: TableProps) => {
-  if(props.ingredient != null
+  if (props.ingredient != null
     && props.amount != null
     && props.unit != null
-    && props.ratio != null){
-  let i:number = 0
-  while(i < props.ingredient?.length){
+    && props.ratio != null) {
+    let i: number = 0
+    let tablebody: React.ReactNode = ''
+    while (i < props.ingredient?.length) {
+      tablebody = tablebody + '<Tr><Td>' + props.ingredient[i] + '</Td><Td>' + Number(props.amount[i]) * props.ratio + '</Td><Td>' + props.unit[i] + '</Td></Tr>'
+      i++;
+    }
 
-    i++;
-  }
-  
 
-  return (
-    <TableContainer>
-      <Table variant='striped' colorScheme='teal'>
-        <TableCaption></TableCaption>
-        <Thead>
-          <Tr>
-            <Th>材料名</Th>
-            <Th>量</Th>
-            <Th isNumeric>単位</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          
-        </Tbody>
-      </Table>
-    </TableContainer>
-  );
+    return (
+      <TableContainer>
+        <Table variant='striped' colorScheme='teal'>
+          <TableCaption></TableCaption>
+          <Thead>
+            <Tr>
+              <Th>材料名</Th>
+              <Th>量</Th>
+              <Th isNumeric>単位</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+
+          </Tbody>
+        </Table>
+      </TableContainer>
+    );
   }
-  else{
-    return(
+  else {
+    return (
       <></>
     )
   }
 }
 
 type Outputprops = {
+  imagemode: boolean
   ingredient: Array<string> | null
   amount: Array<number> | null
   unit: Array<string> | null
   ratio: number | null
   read: () => void
   calcRatio: () => void
+  recognize: () => void
 }
 
 const Output = (props: Outputprops) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
+  let button: React.ReactNode
+
+  if (props.imagemode) {
+    button = "<Button colorScheme='teal' onClick={() => {props.recognize(); onOpen(); }} >次へ</Button>"
+  }
+  else {
+    button = "<Button colorScheme='teal' onClick={() => { props.read();onOpen(); }} >次へ</Button>"
+  }
 
   return (
     <>
-      <Button colorScheme='teal' onClick={() => { props.read(); onOpen(); }} >
+      <Button colorScheme='teal' onClick={() => {props.recognize(); onOpen(); }} >
         次へ
-      </Button>
+        </Button>
       <Drawer
         isOpen={isOpen}
         placement='right'
@@ -206,7 +223,7 @@ const Output = (props: Outputprops) => {
           </DrawerBody>
 
           <DrawerFooter>
-
+            <div id="output"></div>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -223,6 +240,7 @@ type Pagestate = {
   amount: Array<number> | null;
   unit: Array<string> | null;
   ratio: number | null;
+  imagemode: boolean
 }
 
 class Page extends React.Component<{}, Pagestate> {
@@ -233,7 +251,8 @@ class Page extends React.Component<{}, Pagestate> {
       ingredient: null,
       amount: null,
       unit: null,
-      ratio: null
+      ratio: null,
+      imagemode: true
     }
   }
 
@@ -243,7 +262,7 @@ class Page extends React.Component<{}, Pagestate> {
         <Heading>レシパン</Heading>
 
         <br />
-        <Inputmode />
+        <Inputmode swich={() => this.swich()} />
 
         <Fileinput
           read={() => this.read()}
@@ -257,6 +276,8 @@ class Page extends React.Component<{}, Pagestate> {
         <Output
           read={() => this.read()}
           calcRatio={() => this.calcRatio()}
+          recognize={() => this.recognize()}
+          imagemode={this.state.imagemode}
           ingredient={this.state.ingredient}
           amount={this.state.amount}
           unit={this.state.unit}
@@ -266,7 +287,19 @@ class Page extends React.Component<{}, Pagestate> {
     )
   }
 
-
+  swich() {
+    const imageinput = document.getElementById('emageinput') as HTMLInputElement
+    if (imageinput.checked) {
+      this.setState({
+        imagemode: true
+      })
+    }
+    else {
+      this.setState({
+        imagemode: false
+      })
+    }
+  }
 
   dispImage() {
     const alt = document.getElementById('alt') as HTMLElement;
@@ -281,12 +314,30 @@ class Page extends React.Component<{}, Pagestate> {
     filereader.readAsDataURL(inputImage.files![0])
   }
 
+  recognize() {
+    const imageZone = document.getElementById('fileInput') as HTMLInputElement
+    //imageZone.addEventListener('click', resizePinnedImage, false)
+    //function resizePinnedImage(e:any) {
+    if (imageZone.files != null && imageZone.files != undefined) {
+      const file = imageZone.files[0]
+      if (!file.type.match('image.*')) { console.log('finish'); return }
+      Tesseract.recognize(
+        file,
+        'jpn', // 言語設定
+        { logger: m => console.log(m) }
+      ).then(({ data: { text } }) => {
+        const out = document.getElementById('output')!
+        out.innerHTML = text
+      })
+    }
+
+  }
+
   read() {
     //HTMLからデータを受け取る
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     const buf = fileInput.files!;
 
-    console.log("aiuwe");
     //受け取りに成功していたら、内容を取り出す
     if (buf[0] !== null) {
       this.setState({

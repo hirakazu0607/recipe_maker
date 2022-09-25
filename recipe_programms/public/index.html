@@ -28,25 +28,14 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!--
     <input type="file" id="image_zone">
     <div id="output"></div>
     <script src='https://unpkg.com/tesseract.js@v2.0.2/dist/tesseract.min.js'></script>
     <script>
-      const imageZone = document.getElementById('image_zone')
-      imageZone.addEventListener('change', resizePinnedImage, false)
-      function resizePinnedImage(e) {
-        const file = e.target.files[0]
-        if (!file.type.match('image.*')) { return }
-        Tesseract.recognize(
-          file,
-          'jpn', // 言語設定
-          { logger: m => console.log(m) }
-        ).then(({ data: { text } }) => {
-          const out = document.getElementById('output')
-          out.innerHTML = text
-        })
-      }
     </script>
+  -->
+
     <div id="root"></div>
     
     <!--
